@@ -21,7 +21,7 @@ function submitSearch() {
         <h1>Lecturer Invigilation Portal</h1>
 
         <form @submit.prevent="submitSearch">
-            <label for="invigilator-name">Enter Full Name</label>
+            <label for="invigilator-name">Enter Lecturer Name</label>
             <input
                 id="invigilator-name"
                 v-model="invigilatorFullName"

@@ -63,8 +63,8 @@ class MasterScheduleExcelReader
                 'end_time' => $endTime,
                 'course_codes' => trim((string) $courseCodes),
                 'room' => trim((string) $room),
-                'lecturer_name' => trim((string) $lecturerName) ?: null,
-                'invigilator_name' => trim((string) $invigilatorName),
+                'lecturer_name' => $this->normalizeName($lecturerName) ?: null,
+                'invigilator_name' => $this->normalizeName($invigilatorName),
                 'student_count' => $studentCount,
                 'student_count_note' => $studentCountNote,
             ]);
@@ -119,6 +119,22 @@ class MasterScheduleExcelReader
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    private function normalizeName(mixed $rawName): string
+    {
+        $name = trim((string) $rawName);
+
+        // Collapse repeated whitespace
+        $name = preg_replace('/\s+/', ' ', $name);
+
+        // Standardize title formatting: "Dr.Watson", "Dr Watson", and "Dr. Watson"
+        // all become "Dr. Watson" - the separator (period/space, however present)
+        // is fully consumed by the match, then one canonical form is always emitted,
+        // so nothing gets duplicated.
+        $name = preg_replace('/\b(Dr|Mr|Mrs|Ms|Prof|Rev)\.?\s*/', '$1. ', $name);
+
+        return $name;
     }
 
     private function parseStudentCount(mixed $raw): array

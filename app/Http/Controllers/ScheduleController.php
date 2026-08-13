@@ -19,8 +19,15 @@ class ScheduleController extends Controller
             'name' => ['required', 'string', 'max:255'],
         ]);
 
-        $invigilator = Invigilator::whereRaw('LOWER(name) = ?', [mb_strtolower(trim($validated['name']))])
-            ->first();
+        $searchTerms = preg_split('/\s+/', mb_strtolower(trim($validated['name'])));
+
+        $query = Invigilator::query();
+
+        foreach ($searchTerms as $term) {
+            $query->whereRaw('LOWER(name) LIKE ?', ["%{$term}%"]);
+        }
+
+        $invigilator = $query->first();
 
         if (! $invigilator) {
             return response()->json([

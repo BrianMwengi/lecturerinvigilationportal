@@ -7,3 +7,109 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+.search-gate {
+    @apply flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 sm:p-6;
+}
+
+.search-gate h1 {
+    @apply text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-6 sm:mb-8 text-center;
+}
+
+.search-gate form {
+    @apply flex flex-col gap-4 w-full max-w-md;
+}
+
+.search-gate label {
+    @apply block text-sm font-medium text-gray-700 mb-2;
+}
+
+.search-gate input {
+    @apply w-full px-4 py-3 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base;
+}
+
+.search-gate button {
+    @apply w-full px-4 py-3 sm:py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition text-base;
+}
+
+.error-message {
+    @apply mt-4 text-red-600 text-center font-medium;
+}
+
+.dashboard {
+    @apply min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8;
+}
+
+.dashboard header {
+    @apply mb-6 sm:mb-8 pb-4 sm:pb-6 border-b-2 border-gray-200 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between;
+}
+
+.dashboard h2 {
+    @apply text-xl sm:text-2xl md:text-3xl font-bold text-gray-800;
+}
+
+.badge {
+    @apply inline-block px-4 py-2 rounded-full text-sm font-semibold;
+}
+
+.badge--verified {
+    @apply bg-green-100 text-green-800;
+}
+
+.badge--unverified {
+    @apply bg-yellow-100 text-yellow-800;
+}
+
+/* Mobile: stacked cards (hidden from md upward) */
+.schedule-cards {
+    @apply grid gap-4 mb-8 md:hidden;
+}
+
+.schedule-card {
+    @apply bg-white shadow-md rounded-lg p-4 border border-gray-100;
+}
+
+.schedule-card__row {
+    @apply flex justify-between items-start gap-4 py-1.5 border-b border-gray-100 last:border-b-0;
+}
+
+.schedule-card__label {
+    @apply text-sm font-semibold text-gray-500 shrink-0;
+}
+
+.schedule-card__value {
+    @apply text-sm text-gray-800 text-right;
+}
+
+/* Desktop: table (hidden below md, shown from md upward) */
+.schedule-table-wrapper {
+    @apply hidden md:block overflow-x-auto bg-white shadow-md rounded-lg mb-8;
+}
+
+.dashboard table {
+    @apply w-full border-collapse;
+}
+
+.dashboard thead {
+    @apply bg-blue-600 text-white;
+}
+
+.dashboard th {
+    @apply px-4 lg:px-6 py-3 text-left font-semibold whitespace-nowrap;
+}
+
+.dashboard td {
+    @apply px-4 lg:px-6 py-4 border-b border-gray-200;
+}
+
+.dashboard tbody tr:hover {
+    @apply bg-blue-50;
+}
+
+.dashboard footer {
+    @apply text-center;
+}
+
+.dashboard button {
+    @apply w-full sm:w-auto px-6 py-3 sm:py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition text-base;
+}
