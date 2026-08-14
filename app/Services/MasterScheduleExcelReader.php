@@ -3,27 +3,28 @@
 namespace App\Services;
 
 use Carbon\Carbon;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class MasterScheduleExcelReader
 {
-    private const MASTER_FILE_RELATIVE_PATH = 'app/master_schedule.xlsx';
+    private const DISK_NAME = 'master_schedule';
+    private const MASTER_FILE_PATH = 'master_schedule.xlsx';
     private const SHEET_NAME = 'Sheet2';
     private const FIRST_DATA_ROW = 9; // row 8 holds the column headers
 
     public function readAllDuties(): Collection
     {
-        $filePath = storage_path(self::MASTER_FILE_RELATIVE_PATH);
+        $disk = Storage::disk(self::DISK_NAME);
 
-        if (! file_exists($filePath)) {
+        if (! $disk->exists(self::MASTER_FILE_PATH)) {
             return collect();
         }
 
-        $spreadsheet = IOFactory::load($filePath);
-        $worksheet = $spreadsheet->sheetNameExists(self::SHEET_NAME)
-            ? $spreadsheet->getSheetByName(self::SHEET_NAME)
-            : $spreadsheet->getSheet(0);
+        $worksheet = $this->loadWorksheet($disk);
 
         $duties = collect();
         $currentDate = null;
@@ -40,8 +41,6 @@ class MasterScheduleExcelReader
 
             [$dateCell, $timeCell, $courseCodes, $studentCountRaw, $room, $lecturerName, $invigilatorName] = $cellValues;
 
-            // Date and Time are merged cells in the source file - only the top row of each
-            // block has a value, so we carry the last-seen value down to the rows below it.
             if (filled($dateCell)) {
                 $currentDate = $this->extractDateFromDayCell((string) $dateCell) ?? $currentDate;
             }
@@ -73,6 +72,26 @@ class MasterScheduleExcelReader
         return $duties;
     }
 
+    private function loadWorksheet(Filesystem $disk): Worksheet
+    {
+        // PhpSpreadsheet needs a real local file path to read from. In production
+        // the file actually lives in Laravel Object Storage (the app server's own
+        // disk is ephemeral and gets wiped on every deploy), so we pull it down to
+        // a throwaway temp file first, then discard that temp file immediately.
+        $temporaryFilePath = tempnam(sys_get_temp_dir(), 'master_schedule_');
+        file_put_contents($temporaryFilePath, $disk->get(self::MASTER_FILE_PATH));
+
+        try {
+            $spreadsheet = IOFactory::load($temporaryFilePath);
+
+            return $spreadsheet->sheetNameExists(self::SHEET_NAME)
+                ? $spreadsheet->getSheetByName(self::SHEET_NAME)
+                : $spreadsheet->getSheet(0);
+        } finally {
+            @unlink($temporaryFilePath);
+        }
+    }
+
     private function rowRepresentsARealDuty(mixed $courseCodes, mixed $invigilatorName): bool
     {
         $courseCodes = trim((string) $courseCodes);
@@ -87,7 +106,6 @@ class MasterScheduleExcelReader
 
     private function extractDateFromDayCell(string $dayCell): ?string
     {
-        // Source format: "MONDAY 17/08/2026" - we only need the "17/08/2026" part.
         if (! preg_match('/(\d{1,2}\/\d{1,2}\/\d{4})/', $dayCell, $matches)) {
             return null;
         }
@@ -111,7 +129,6 @@ class MasterScheduleExcelReader
 
     private function normalizeTime(string $rawTime): ?string
     {
-        // Source uses both "9:00AM" and "12.30 PM" styles - unify the separator first.
         $rawTime = trim(str_replace('.', ':', $rawTime));
 
         try {
@@ -124,14 +141,7 @@ class MasterScheduleExcelReader
     private function normalizeName(mixed $rawName): string
     {
         $name = trim((string) $rawName);
-
-        // Collapse repeated whitespace
         $name = preg_replace('/\s+/', ' ', $name);
-
-        // Standardize title formatting: "Dr.Watson", "Dr Watson", and "Dr. Watson"
-        // all become "Dr. Watson" - the separator (period/space, however present)
-        // is fully consumed by the match, then one canonical form is always emitted,
-        // so nothing gets duplicated.
         $name = preg_replace('/\b(Dr|Mr|Mrs|Ms|Prof|Rev)\.?\s*/', '$1. ', $name);
 
         return $name;
@@ -149,7 +159,6 @@ class MasterScheduleExcelReader
             return [(int) $raw, null];
         }
 
-        // e.g. "34+1=35" -> total is 35, keep the original expression as a note.
         $parts = explode('=', $raw);
         $total = (int) trim(end($parts));
 
