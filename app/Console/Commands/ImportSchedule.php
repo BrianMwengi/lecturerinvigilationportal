@@ -22,6 +22,12 @@ class ImportSchedule extends Command
             return self::FAILURE;
         }
 
+        // The Excel file is the single source of truth. Wipe existing duties first so
+        // every import is a full resync - otherwise a row whose course code, date, or
+        // time changed in the source file is left behind as a stale duplicate instead
+        // of being replaced, which is exactly what caused the verification mismatch.
+        InvigilationDuty::truncate();
+
         $importedCount = 0;
 
         foreach ($duties as $duty) {
@@ -36,21 +42,17 @@ class ImportSchedule extends Command
 
             $invigilator = Invigilator::firstOrCreate(['name' => $duty['invigilator_name']]);
 
-            InvigilationDuty::updateOrCreate(
-                [
-                    'invigilator_id' => $invigilator->id,
-                    'date' => $duty['date'],
-                    'start_time' => $duty['start_time'],
-                    'course_codes' => $duty['course_codes'],
-                ],
-                [
-                    'end_time' => $duty['end_time'],
-                    'room' => $duty['room'],
-                    'lecturer_name' => $duty['lecturer_name'],
-                    'student_count' => $duty['student_count'],
-                    'student_count_note' => $duty['student_count_note'],
-                ]
-            );
+            InvigilationDuty::create([
+                'invigilator_id' => $invigilator->id,
+                'date' => $duty['date'],
+                'start_time' => $duty['start_time'],
+                'end_time' => $duty['end_time'],
+                'course_codes' => $duty['course_codes'],
+                'room' => $duty['room'],
+                'lecturer_name' => $duty['lecturer_name'],
+                'student_count' => $duty['student_count'],
+                'student_count_note' => $duty['student_count_note'],
+            ]);
 
             $importedCount++;
         }
