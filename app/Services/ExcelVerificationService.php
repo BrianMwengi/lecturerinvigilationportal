@@ -58,7 +58,3 @@ class ExcelVerificationService
             && $excelDuty['end_time'] === $databaseDuty->end_time->format('H:i');
     }
 }
-
-// Note:::
- // Closure is the function that will be called for each item in the collection to determine if it matches the criteria 
-// e.g it is fn (array $duty) => $duty['course_codes'] === $databaseDuty->course_codes && $duty['date'] === $databaseDuty->date->format('Y-m-d')
