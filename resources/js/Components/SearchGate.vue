@@ -8,7 +8,7 @@ defineProps({
 
 const emit = defineEmits(['search-submitted']);
 
-const invigilatorFullName = ref('');
+const invigilatorFullName = ref(''); 
 
 function submitSearch() {
     if (!invigilatorFullName.value.trim()) return;

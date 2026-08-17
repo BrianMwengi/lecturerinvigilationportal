@@ -11,6 +11,6 @@ class Invigilator extends Model
 
     public function invigilationDuties(): HasMany
     {
-        return $this->hasMany(InvigilationDuty::class);
+        return $this->hasMany(InvigilationDuty::class); // a invigilator can have many invigilation duties
     }
 }
